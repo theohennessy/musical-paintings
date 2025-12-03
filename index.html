@@ -100,7 +100,7 @@ function startAudio(event) {
   audios.forEach(audio => {
     audio.muted = false; // unmute for mobile
     audio.volume = 0;
-    audio.play().catch(e => console.log("Mobile play blocked:", e));
+    audio.play().catch(e => alert(e));
   });
 
   audioStarted = true;
