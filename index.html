@@ -4,67 +4,87 @@
 <meta charset="UTF-8" />
 <title>Musical Paintings</title>
 <style>
-  body {
-    margin: 0;
-    font-family: sans-serif;
-    background: #FFF;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-  }
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  font-family: sans-serif;
+  background: #000;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
 
-  #container {
-    position: relative;
-    width: 100%;
-  }
+#container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
 
-  #BG {
-    width: 100%;
-    display: block;
-  }
+#BG {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
 
-  /* Start button overlay */
-  #startOverlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.6);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    color: #FFF;
-    font-size: 2rem;
-    cursor: pointer;
-    z-index: 10;
-  }
+#startOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #FFF;
+  font-size: 2rem;
+  cursor: pointer;
+  z-index: 10;
+}
 
-  .hotspot {
-    position: absolute;
-    border-radius: 12px;
-    cursor: pointer;
-  }
+#restartBtn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 20;
+  padding: 10px 15px;
+  font-size: 1rem;
+  cursor: pointer;
+  background: rgba(0,0,0,0.5);
+  color: #FFF;
+  border: none;
+  border-radius: 5px;
+  display: none;
+}
 
-  #HS1 { width: 180px; height: 120px; }
-  #HS2 { width: 180px; height: 90px; }
-  #HS3 { width: 120px; height: 90px; }
+.hotspot {
+  position: absolute;
+  border-radius: 12px;
+  cursor: pointer;
+}
 
-  .overlay {
-    position: absolute;
-    width: 100%;
-    top: 0;
-    left: 0;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 1s ease;
-  }
-  .overlay.visible {
-    opacity: 1;
-  }
+#HS1 { width: 180px; height: 120px; }
+#HS2 { width: 180px; height: 90px; }
+#HS3 { width: 120px; height: 90px; }
 
-  audio { display: none; }
+.overlay {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 1s ease;
+  object-fit: cover;
+}
+.overlay.visible { opacity: 1; }
+
+audio { display: none; }
 </style>
 </head>
 <body>
@@ -85,29 +105,37 @@
   <audio id="MP33" src="MP33.mp3" muted playsinline preload="auto"></audio>
 
   <div id="startOverlay">Start</div>
+  <button id="restartBtn">Restart</button>
 </div>
 
 <script>
 const audios = ["MP31","MP32","MP33"].map(id => document.getElementById(id));
 let audioStarted = false;
-const startOverlay = document.getElementById("startOverlay");
 
-// Start all audio on first user gesture
+const startOverlay = document.getElementById("startOverlay");
+const restartBtn = document.getElementById("restartBtn");
+
+// Start audio & fullscreen
 function startAudio(event) {
+  event.preventDefault();
   if (audioStarted) return;
 
-  audios.forEach(audio => {
-    audio.muted = true; // unmute for mobile
-    audio.volume = 0;
-    audio.play().catch(e => alert(e));
-  });
+  // Request fullscreen
+  if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen().catch(()=>{});
+  } else if (document.documentElement.webkitRequestFullscreen) {
+    document.documentElement.webkitRequestFullscreen();
+  }
+
+  // Play first audio to unlock mobile
+  audios[0].muted = false;
+  audios[0].volume = 0;
+  audios[0].play().catch(e => console.log("Play failed:", e));
 
   audioStarted = true;
   startOverlay.style.display = "none";
+  restartBtn.style.display = "block";
 }
-
-// Bind start button
-startOverlay.addEventListener("click", startAudio);
 
 // Hotspot toggle logic
 function bindToggle(hsId, imgId, audioIndex) {
@@ -118,7 +146,7 @@ function bindToggle(hsId, imgId, audioIndex) {
 
   function toggle(event) {
     event.preventDefault();
-    if (!audioStarted) return; // ignore until audio started
+    if (!audioStarted) return;
     visible = !visible;
     img.classList.toggle("visible", visible);
     fadeAudio(audio, visible ? 1 : 0, visible ? 200 : 300);
@@ -130,8 +158,6 @@ function bindToggle(hsId, imgId, audioIndex) {
 
 // Audio fade helper
 function fadeAudio(audio, target, duration) {
-    
-  if (target === 1) audio.muted = false;
   const steps = 8;
   const stepTime = duration / steps;
   const start = audio.volume;
@@ -148,7 +174,29 @@ function fadeAudio(audio, target, duration) {
   }, stepTime);
 }
 
-// Bind hotspots
+// Restart function
+function restart() {
+  // Reset overlays
+  ["IMG1","IMG2","IMG3"].forEach(id => document.getElementById(id).classList.remove("visible"));
+
+  // Reset audio
+  audios.forEach(a => {
+    a.pause();
+    a.currentTime = 0;
+    a.muted = true;
+    a.volume = 0;
+  });
+
+  audioStarted = false;
+  startOverlay.style.display = "flex";
+  restartBtn.style.display = "none";
+}
+
+// Bind events
+startOverlay.addEventListener("touchstart", startAudio, { passive: false });
+startOverlay.addEventListener("click", startAudio);
+restartBtn.addEventListener("click", restart);
+
 bindToggle("HS1", "IMG1", 0);
 bindToggle("HS2", "IMG2", 1);
 bindToggle("HS3", "IMG3", 2);
