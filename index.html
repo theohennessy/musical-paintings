@@ -93,11 +93,12 @@ let audioStarted = false;
 
 const startOverlay = document.getElementById("startOverlay");
 
-function startAudio() {
+function startAudio(event) {
+  event.preventDefault(); // prevent double tap click
   if (!audioStarted) {
     audios.forEach(a => {
       a.volume = 0;
-      a.muted = true;
+      a.muted = false;  // unmute for mobile autoplay
       a.play();
     });
     audioStarted = true;
@@ -105,28 +106,30 @@ function startAudio() {
   }
 }
 
-// Start button click / touch
+// Bind start button (click + touchstart)
 startOverlay.addEventListener("click", startAudio);
-startOverlay.addEventListener("touchstart", startAudio);
+startOverlay.addEventListener("touchstart", startAudio, { passive: false });
 
+// Hotspot toggles only after audio started
 function bindToggle(hsId, imgId, audioIndex) {
   const hs = document.getElementById(hsId);
   const img = document.getElementById(imgId);
   const audio = audios[audioIndex];
   let visible = false;
 
-  function toggle() {
+  function toggle(event) {
+    event.preventDefault();
+    if (!audioStarted) return; // ignore if audio hasn't started yet
     visible = !visible;
     img.classList.toggle("visible", visible);
     fadeAudioFast(audio, visible ? 1 : 0, visible ? 200 : 300);
   }
 
   hs.addEventListener("click", toggle);
-  hs.addEventListener("touchstart", toggle);
+  hs.addEventListener("touchstart", toggle, { passive: false });
 }
 
 function fadeAudioFast(audio, target, duration) {
-  audio.muted = false;
   const steps = 8;
   const stepTime = duration / steps;
   const start = audio.volume;
