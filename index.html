@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>POC Hotspots</title>
+<style>
+  body {
+    margin: 0;
+    font-family: sans-serif;
+    background:FFF;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+  }
+
+  #container {
+    position: relative;
+    width: 100%; /* quick poc fixed size */
+  }
+
+  #BG {
+    width: 100%;
+    display: block;
+  }
+
+  .hotspot {
+    position: absolute;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: background 0.3s;
+  }
+  #HS3 {
+    width: 120px;
+    height: 90px;
+  }
+  #HS2 {
+    width: 180px;
+    height: 90px;
+  }
+  #HS1 {
+    width: 180px;
+    height: 120px;
+  }
+
+  .overlay {
+    position: absolute;
+    width: 100%;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1s ease;
+  }
+  .overlay.visible {
+    opacity: 1;
+  }
+
+  audio {
+    display: none;
+  }
+</style>
+</head>
+<body>
+<div id="container">
+  <img id="BG" src="BG.png" />
+
+  <div id="HS1" class="hotspot" style="top:54%; left:74%;"></div>
+  <div id="HS2" class="hotspot" style="top:52%; left:56%;"></div>
+  <div id="HS3" class="hotspot" style="top:50%; left:25%;"></div>
+
+  <img id="IMG1" class="overlay" src="IMG1.png" />
+  <img id="IMG2" class="overlay" src="IMG2.png" />
+  <img id="IMG3" class="overlay" src="IMG3.png" />
+
+  <audio id="MP31" src="MP31.mp3" muted></audio>
+  <audio id="MP32" src="MP32.mp3" muted></audio>
+  <audio id="MP33" src="MP33.mp3" muted></audio>
+</div>
+
+<script>
+  // Start all audio in sync
+  const audios = ["MP31","MP32","MP33"].map(id => document.getElementById(id));
+  audios.forEach(a => {
+    a.volume = 0;
+    a.play();
+  });
+
+  // Toggle logic for each hotspot
+  function bindToggle(hsId, imgId, audioIndex) {
+    const hs = document.getElementById(hsId);
+    const img = document.getElementById(imgId);
+    const audio = audios[audioIndex];
+
+    let visible = false;
+
+    hs.addEventListener("click", () => {
+      visible = !visible;
+
+      if (visible) {
+        img.classList.add("visible");
+        hs.classList.add("active");
+
+        fadeAudio(audio, 1);
+      } else {
+        img.classList.remove("visible");
+        hs.classList.remove("active");
+
+        fadeAudio(audio, 0);
+      }
+    });
+  }
+
+  // Audio fade helper
+  function fadeAudio(audio, target, duration = 100) {
+    const steps = 20;
+    const stepTime = duration / steps;
+    const start = audio.volume;
+    const diff = target - start;
+    let i = 0;
+
+    const fade = setInterval(() => {
+      i++;
+      audio.volume = start + diff * (i/steps);
+      if (i >= steps) {
+        clearInterval(fade);
+        audio.muted = target === 0;
+      }
+    }, stepTime);
+  }
+
+  // Bind the 3 toggles
+  bindToggle("HS1", "IMG1", 0);
+  bindToggle("HS2", "IMG2", 1);
+  bindToggle("HS3", "IMG3", 2);
+</script>
+</body>
+</html>
