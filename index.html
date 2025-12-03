@@ -7,7 +7,7 @@
   body {
     margin: 0;
     font-family: sans-serif;
-    background:FFF;
+    background: #FFF;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -16,7 +16,7 @@
 
   #container {
     position: relative;
-    width: 100%; /* quick poc fixed size */
+    width: 100%;
   }
 
   #BG {
@@ -24,26 +24,32 @@
     display: block;
   }
 
+  /* Start button overlay */
+  #startOverlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #FFF;
+    font-size: 2rem;
+    cursor: pointer;
+    z-index: 10;
+  }
+
   .hotspot {
     position: absolute;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
+    border-radius: 12px;
     cursor: pointer;
-    transition: background 0.3s;
   }
-  #HS3 {
-    width: 120px;
-    height: 90px;
-  }
-  #HS2 {
-    width: 180px;
-    height: 90px;
-  }
-  #HS1 {
-    width: 180px;
-    height: 120px;
-  }
+
+  #HS1 { width: 180px; height: 120px; }
+  #HS2 { width: 180px; height: 90px; }
+  #HS3 { width: 120px; height: 90px; }
 
   .overlay {
     position: absolute;
@@ -58,12 +64,11 @@
     opacity: 1;
   }
 
-  audio {
-    display: none;
-  }
+  audio { display: none; }
 </style>
 </head>
 <body>
+
 <div id="container">
   <img id="BG" src="BG.png" />
 
@@ -75,66 +80,74 @@
   <img id="IMG2" class="overlay" src="IMG2.png" />
   <img id="IMG3" class="overlay" src="IMG3.png" />
 
-  <audio id="MP31" src="MP31.mp3" muted></audio>
-  <audio id="MP32" src="MP32.mp3" muted></audio>
-  <audio id="MP33" src="MP33.mp3" muted></audio>
+  <audio id="MP31" src="MP31.mp3" muted playsinline></audio>
+  <audio id="MP32" src="MP32.mp3" muted playsinline></audio>
+  <audio id="MP33" src="MP33.mp3" muted playsinline></audio>
+
+  <div id="startOverlay">Start</div>
 </div>
 
 <script>
-  // Start all audio in sync
-  const audios = ["MP31","MP32","MP33"].map(id => document.getElementById(id));
-  audios.forEach(a => {
-    a.volume = 0;
-    a.play();
-  });
+const audios = ["MP31","MP32","MP33"].map(id => document.getElementById(id));
+let audioStarted = false;
 
-  // Toggle logic for each hotspot
-  function bindToggle(hsId, imgId, audioIndex) {
-    const hs = document.getElementById(hsId);
-    const img = document.getElementById(imgId);
-    const audio = audios[audioIndex];
+const startOverlay = document.getElementById("startOverlay");
 
-    let visible = false;
-
-    hs.addEventListener("click", () => {
-      visible = !visible;
-
-      if (visible) {
-        img.classList.add("visible");
-        hs.classList.add("active");
-
-        fadeAudio(audio, 1);
-      } else {
-        img.classList.remove("visible");
-        hs.classList.remove("active");
-
-        fadeAudio(audio, 0);
-      }
+function startAudio() {
+  if (!audioStarted) {
+    audios.forEach(a => {
+      a.volume = 0;
+      a.muted = true;
+      a.play();
     });
+    audioStarted = true;
+    startOverlay.style.display = "none";
+  }
+}
+
+// Start button click / touch
+startOverlay.addEventListener("click", startAudio);
+startOverlay.addEventListener("touchstart", startAudio);
+
+function bindToggle(hsId, imgId, audioIndex) {
+  const hs = document.getElementById(hsId);
+  const img = document.getElementById(imgId);
+  const audio = audios[audioIndex];
+  let visible = false;
+
+  function toggle() {
+    visible = !visible;
+    img.classList.toggle("visible", visible);
+    fadeAudioFast(audio, visible ? 1 : 0, visible ? 200 : 300);
   }
 
-  // Audio fade helper
-  function fadeAudio(audio, target, duration = 100) {
-    const steps = 20;
-    const stepTime = duration / steps;
-    const start = audio.volume;
-    const diff = target - start;
-    let i = 0;
+  hs.addEventListener("click", toggle);
+  hs.addEventListener("touchstart", toggle);
+}
 
-    const fade = setInterval(() => {
-      i++;
-      audio.volume = start + diff * (i/steps);
-      if (i >= steps) {
-        clearInterval(fade);
-        audio.muted = target === 0;
-      }
-    }, stepTime);
-  }
+function fadeAudioFast(audio, target, duration) {
+  audio.muted = false;
+  const steps = 8;
+  const stepTime = duration / steps;
+  const start = audio.volume;
+  const diff = target - start;
+  let i = 0;
 
-  // Bind the 3 toggles
-  bindToggle("HS1", "IMG1", 0);
-  bindToggle("HS2", "IMG2", 1);
-  bindToggle("HS3", "IMG3", 2);
+  const fade = setInterval(() => {
+    i++;
+    audio.volume = start + diff * (i/steps);
+    if (i >= steps) {
+      clearInterval(fade);
+      if (target === 0) audio.muted = true;
+    }
+  }, stepTime);
+}
+
+// Bind hotspots
+bindToggle("HS1", "IMG1", 0);
+bindToggle("HS2", "IMG2", 1);
+bindToggle("HS3", "IMG3", 2);
 </script>
+
 </body>
 </html>
