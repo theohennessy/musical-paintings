@@ -92,21 +92,21 @@ const audios = ["MP31","MP32","MP33"].map(id => document.getElementById(id));
 let audioStarted = false;
 const startOverlay = document.getElementById("startOverlay");
 
-// Mobile-safe start: play one track immediately
+// Start all audio on first user gesture
 function startAudio(event) {
-  event.preventDefault();
   if (audioStarted) return;
 
-  // Play first audio to unlock mobile audio
-  audios[0].muted = false;
-  audios[0].volume = 0;
-  audios[0].play().catch(e => console.log("Play failed:", e));
+  audios.forEach(audio => {
+    audio.muted = false; // unmute for mobile
+    audio.volume = 0;
+    audio.play().catch(e => alert(e));
+  });
 
   audioStarted = true;
   startOverlay.style.display = "none";
 }
 
-// Bind Start button
+// Bind start button
 startOverlay.addEventListener("touchstart", startAudio, { passive: false });
 startOverlay.addEventListener("click", startAudio);
 
@@ -119,7 +119,7 @@ function bindToggle(hsId, imgId, audioIndex) {
 
   function toggle(event) {
     event.preventDefault();
-    if (!audioStarted) return; // ignore if audio not started
+    if (!audioStarted) return; // ignore until audio started
     visible = !visible;
     img.classList.toggle("visible", visible);
     fadeAudio(audio, visible ? 1 : 0, visible ? 200 : 300);
