@@ -80,9 +80,9 @@
   <img id="IMG2" class="overlay" src="IMG2.png" />
   <img id="IMG3" class="overlay" src="IMG3.png" />
 
-  <audio id="MP31" src="MP31.mp3" muted playsinline></audio>
-  <audio id="MP32" src="MP32.mp3" muted playsinline></audio>
-  <audio id="MP33" src="MP33.mp3" muted playsinline></audio>
+  <audio id="MP31" src="MP31.mp3" muted playsinline preload="auto"></audio>
+  <audio id="MP32" src="MP32.mp3" muted playsinline preload="auto"></audio>
+  <audio id="MP33" src="MP33.mp3" muted playsinline preload="auto"></audio>
 
   <div id="startOverlay">Start</div>
 </div>
@@ -90,27 +90,28 @@
 <script>
 const audios = ["MP31","MP32","MP33"].map(id => document.getElementById(id));
 let audioStarted = false;
-
 const startOverlay = document.getElementById("startOverlay");
 
+// Start all audio on first user gesture
 function startAudio(event) {
-  event.preventDefault(); // prevent double tap click
-  if (!audioStarted) {
-    audios.forEach(a => {
-      a.volume = 0;
-      a.muted = false;  // unmute for mobile autoplay
-      a.play();
-    });
-    audioStarted = true;
-    startOverlay.style.display = "none";
-  }
+  event.preventDefault();
+  if (audioStarted) return;
+
+  audios.forEach(audio => {
+    audio.muted = false; // unmute for mobile
+    audio.volume = 0;
+    audio.play().catch(e => console.log("Mobile play blocked:", e));
+  });
+
+  audioStarted = true;
+  startOverlay.style.display = "none";
 }
 
-// Bind start button (click + touchstart)
-startOverlay.addEventListener("click", startAudio);
+// Bind start button
 startOverlay.addEventListener("touchstart", startAudio, { passive: false });
+startOverlay.addEventListener("click", startAudio);
 
-// Hotspot toggles only after audio started
+// Hotspot toggle logic
 function bindToggle(hsId, imgId, audioIndex) {
   const hs = document.getElementById(hsId);
   const img = document.getElementById(imgId);
@@ -119,17 +120,18 @@ function bindToggle(hsId, imgId, audioIndex) {
 
   function toggle(event) {
     event.preventDefault();
-    if (!audioStarted) return; // ignore if audio hasn't started yet
+    if (!audioStarted) return; // ignore until audio started
     visible = !visible;
     img.classList.toggle("visible", visible);
-    fadeAudioFast(audio, visible ? 1 : 0, visible ? 200 : 300);
+    fadeAudio(audio, visible ? 1 : 0, visible ? 200 : 300);
   }
 
   hs.addEventListener("click", toggle);
   hs.addEventListener("touchstart", toggle, { passive: false });
 }
 
-function fadeAudioFast(audio, target, duration) {
+// Audio fade helper
+function fadeAudio(audio, target, duration) {
   const steps = 8;
   const stepTime = duration / steps;
   const start = audio.volume;
