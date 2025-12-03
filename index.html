@@ -97,7 +97,7 @@ function startAudio(event) {
   if (audioStarted) return;
 
   audios.forEach(audio => {
-    audio.muted = false; // unmute for mobile
+    audio.muted = true; // unmute for mobile
     audio.volume = 0;
     audio.play().catch(e => alert(e));
   });
@@ -131,6 +131,8 @@ function bindToggle(hsId, imgId, audioIndex) {
 
 // Audio fade helper
 function fadeAudio(audio, target, duration) {
+    
+  if (target === 1) audio.muted = false;
   const steps = 8;
   const stepTime = duration / steps;
   const start = audio.volume;
