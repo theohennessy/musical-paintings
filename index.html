@@ -25,6 +25,13 @@
   }
 
   /* Start button overlay */
+  #restartOverlay {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 2rem;
+    cursor: pointer;
+  }
   #startOverlay {
     position: absolute;
     top: 0;
@@ -47,9 +54,9 @@
     cursor: pointer;
   }
 
-  #HS1 { width: 180px; height: 120px; }
-  #HS2 { width: 180px; height: 90px; }
-  #HS3 { width: 120px; height: 90px; }
+  #HS1 { width: 10vw; height: 10vw; }
+  #HS2 { width: 10vw; height: 6vw; }
+  #HS3 { width: 6vw; height: 6vw; }
 
   .overlay {
     position: absolute;
@@ -84,13 +91,16 @@
   <audio id="MP32" src="MP32.mp3" muted playsinline preload="auto"></audio>
   <audio id="MP33" src="MP33.mp3" muted playsinline preload="auto"></audio>
 
-  <div id="startOverlay">Start</div>
 </div>
+<div id="startOverlay">Start</div>
+<div id="restartOverlay">Restart</div>
 
 <script>
 const audios = ["MP31","MP32","MP33"].map(id => document.getElementById(id));
 let audioStarted = false;
 const startOverlay = document.getElementById("startOverlay");
+const restartOverlay = document.getElementById("restartOverlay");
+restartOverlay.addEventListener('click', function(){location.reload()})
 
 // Start all audio on first user gesture
 function startAudio(event) {
